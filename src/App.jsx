@@ -173,16 +173,42 @@ const useSectionTracking = (sectionIds) => {
     useMotionValueEvent(scrollY, 'change', (latest) => {
         const sectionPositions = sectionIds.map((id, index) => {
             const element = sectionsRef.current[index];
+            if (!element) return { id, top: 0, bottom: 0 };
+            
+            const rect = element.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
             return {
                 id,
-                top: element ? element.offsetTop - 100 : 0,
-                bottom: element ? element.offsetTop + element.offsetHeight : 0,
+                top: element.offsetTop - 100,
+                bottom: element.offsetTop + rect.height - 100,
             };
         });
 
-        const currentSection = sectionPositions.find(
-            (section) => latest >= section.top && latest < section.bottom,
+        // Find the section that the user is currently viewing the most
+        const visibleSections = sectionPositions.filter(
+            (section) => latest >= section.top && latest < section.bottom
         );
+
+        let currentSection;
+        if (visibleSections.length > 0) {
+            // If multiple sections are visible, pick the one that occupies the largest portion of the viewport
+            currentSection = visibleSections.reduce((prev, curr) => {
+                const prevHeight = prev.bottom - prev.top;
+                const currHeight = curr.bottom - curr.top;
+                return prevHeight > currHeight ? prev : curr;
+            });
+        } else {
+            // If no section is visible, find the one that's closest to the current scroll position
+            const scrolledSections = sectionPositions.filter(
+                (section) => latest >= section.top
+            );
+            
+            if (scrolledSections.length > 0) {
+                // Get the last section that was scrolled past
+                currentSection = scrolledSections[scrolledSections.length - 1];
+            }
+        }
 
         if (currentSection && currentSection.id !== activeSection) {
             setActiveSection(currentSection.id);
@@ -859,217 +885,194 @@ const App = () => {
 
                 {/* Carousel Container */}
                 <div className="relative">
-                    <div 
-                        className="overflow-hidden"
-                        style={{ 
-                            perspective: '1000px',
-                            height: '500px'
-                        }}
-                    >
-                        <div 
-                            className="flex transition-transform duration-500 ease-in-out"
-                            style={{ 
-                                transform: `rotateY(${currentProjectIndex * -360 / projects.length}deg)`,
-                                transformStyle: 'preserve-3d'
-                            }}
+                    {/* Main Project Card */}
+                    <div className="overflow-hidden rounded-2xl">
+                        <motion.div
+                            key={currentProjectIndex}
+                            initial={{ opacity: 0, x: 100 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -100 }}
+                            transition={{ duration: 0.5 }}
+                            className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden"
                         >
-                            {projects.map((project, index) => (
-                                <motion.div
-                                    key={project.id}
-                                    className="min-w-full flex-shrink-0"
-                                    style={{ 
-                                        position: 'absolute',
-                                        width: '100%',
-                                        transform: `rotateY(${index * 360 / projects.length}deg) translateZ(300px)`
-                                    }}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ duration: 0.5 }}
-                                >
-                                    <div
-                                        className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden transition-all duration-500"
-                                    >
-                                        <div className="lg:flex">
-                                            <div className="lg:w-1/2 p-6 md:p-8">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h3 className="text-2xl md:text-3xl font-bold">
-                                                            {project.title}
-                                                        </h3>
-                                                        <p className="text-cyan-400 font-medium mt-1">
-                                                            {project.subtitle}
-                                                        </p>
-                                                    </div>
-                                                    <motion.button
-                                                        whileHover={{ scale: 1.1 }}
-                                                        whileTap={{ scale: 0.9 }}
-                                                        onClick={() =>
-                                                            toggleProject(project.id)
-                                                        }
-                                                        className="p-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-colors"
-                                                        aria-label={
-                                                            expandedProject ===
-                                                            project.id
-                                                                ? 'Collapse project'
-                                                                : 'Expand project'
-                                                        }
-                                                    >
-                                                        {expandedProject ===
-                                                        project.id ? (
-                                                            <ChevronUp size={24} />
-                                                        ) : (
-                                                            <ChevronDown size={24} />
-                                                        )}
-                                                    </motion.button>
-                                                </div>
+                            <div className="lg:flex">
+                                <div className="lg:w-1/2 p-6 md:p-8">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-2xl md:text-3xl font-bold">
+                                                {projects[currentProjectIndex].title}
+                                            </h3>
+                                            <p className="text-cyan-400 font-medium mt-1">
+                                                {projects[currentProjectIndex].subtitle}
+                                            </p>
+                                        </div>
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() =>
+                                                toggleProject(projects[currentProjectIndex].id)
+                                            }
+                                            className="p-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-colors"
+                                            aria-label={
+                                                expandedProject ===
+                                                projects[currentProjectIndex].id
+                                                    ? 'Collapse project'
+                                                    : 'Expand project'
+                                            }
+                                        >
+                                            {expandedProject ===
+                                            projects[currentProjectIndex].id ? (
+                                                <ChevronUp size={24} />
+                                            ) : (
+                                                <ChevronDown size={24} />
+                                            )}
+                                        </motion.button>
+                                    </div>
 
-                                                <p className="mt-6 text-gray-300 leading-relaxed">
-                                                    {project.description}
-                                                </p>
+                                    <p className="mt-6 text-gray-300 leading-relaxed">
+                                        {projects[currentProjectIndex].description}
+                                    </p>
 
-                                                {expandedProject === project.id && (
-                                                    <motion.div
-                                                        initial={{
-                                                            opacity: 0,
-                                                            height: 0,
-                                                        }}
-                                                        animate={{
-                                                            opacity: 1,
-                                                            height: 'auto',
-                                                        }}
-                                                        exit={{ opacity: 0, height: 0 }}
-                                                        transition={{ duration: 0.4 }}
-                                                        className="mt-8"
-                                                    >
-                                                        <div className="mb-6">
-                                                            <h4 className="font-bold text-lg mb-3 flex items-center">
-                                                                <Zap
-                                                                    className="mr-2 text-cyan-400"
-                                                                    size={20}
-                                                                />
-                                                                Key Features
-                                                            </h4>
-                                                            <ul className="space-y-2">
-                                                                {project.features.map(
-                                                                    (feature, i) => (
-                                                                        <li
-                                                                            key={i}
-                                                                            className="flex items-start text-gray-300"
-                                                                        >
-                                                                            <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-                                                                            {feature}
-                                                                        </li>
-                                                                    ),
-                                                                )}
-                                                            </ul>
-                                                        </div>
-
-                                                        <div className="mb-6">
-                                                            <h4 className="font-bold text-lg mb-3 flex items-center">
-                                                                <Shield
-                                                                    className="mr-2 text-cyan-400"
-                                                                    size={20}
-                                                                />
-                                                                Engineering Challenges
-                                                                Solved
-                                                            </h4>
-                                                            <ul className="space-y-2">
-                                                                {project.challenges.map(
-                                                                    (challenge, i) => (
-                                                                        <li
-                                                                            key={i}
-                                                                            className="flex items-start text-gray-300"
-                                                                        >
-                                                                            <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                                                                            {challenge}
-                                                                        </li>
-                                                                    ),
-                                                                )}
-                                                            </ul>
-                                                        </div>
-
-                                                        <div className="mb-6">
-                                                            <h4 className="font-bold text-lg mb-3 flex items-center">
-                                                                <Code
-                                                                    className="mr-2 text-cyan-400"
-                                                                    size={20}
-                                                                />
-                                                                Tech Stack
-                                                            </h4>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {project.tech.map(
-                                                                    (tech, i) => (
-                                                                        <span
-                                                                            key={i}
-                                                                            className="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm"
-                                                                        >
-                                                                            {tech}
-                                                                        </span>
-                                                                    ),
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-
-                                                <div className="mt-8 flex flex-wrap gap-3">
-                                                    <motion.a
-                                                        whileHover={{ y: -2 }}
-                                                        whileTap={{ scale: 0.98 }}
-                                                        href={project.liveUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg font-medium transition-all shadow-lg shadow-cyan-500/20"
-                                                        aria-label={`View live demo of ${project.title}`}
-                                                    >
-                                                        Live Demo{' '}
-                                                        <ExternalLink
-                                                            className="ml-2"
-                                                            size={18}
-                                                        />
-                                                    </motion.a>
-                                                    <motion.a
-                                                        whileHover={{ y: -2 }}
-                                                        whileTap={{ scale: 0.98 }}
-                                                        href={project.githubUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center px-5 py-3 bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors"
-                                                        aria-label={`View GitHub repository for ${project.title}`}
-                                                    >
-                                                        GitHub Repository{' '}
-                                                        <Github
-                                                            className="ml-2"
-                                                            size={18}
-                                                        />
-                                                    </motion.a>
-                                                </div>
+                                    {expandedProject === projects[currentProjectIndex].id && (
+                                        <motion.div
+                                            initial={{
+                                                opacity: 0,
+                                                height: 0,
+                                            }}
+                                            animate={{
+                                                opacity: 1,
+                                                height: 'auto',
+                                            }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.4 }}
+                                            className="mt-8"
+                                        >
+                                            <div className="mb-6">
+                                                <h4 className="font-bold text-lg mb-3 flex items-center">
+                                                    <Zap
+                                                        className="mr-2 text-cyan-400"
+                                                        size={20}
+                                                    />
+                                                    Key Features
+                                                </h4>
+                                                <ul className="space-y-2">
+                                                    {projects[currentProjectIndex].features.map(
+                                                        (feature, i) => (
+                                                            <li
+                                                                key={i}
+                                                                className="flex items-start text-gray-300"
+                                                            >
+                                                                <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                                                                {feature}
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
                                             </div>
 
-                                            <div className="lg:w-1/2 bg-gray-800/30 border-t lg:border-t-0 lg:border-l border-gray-800 flex items-center justify-center p-4">
-                                                <div className="relative w-full h-64 md:h-80 lg:h-full">
-                                                    <div
-                                                        className="absolute inset-0 bg-cover bg-center rounded-xl shadow-2xl"
-                                                        style={{
-                                                            backgroundImage: `url(${project.image})`,
-                                                        }}
-                                                    ></div>
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent rounded-xl"></div>
-                                                    <div className="absolute bottom-4 left-4 text-white">
-                                                        <p className="font-bold text-xl md:text-2xl">
-                                                            {project.title}
-                                                        </p>
-                                                        <p className="text-cyan-300">
-                                                            {project.subtitle}
-                                                        </p>
-                                                    </div>
+                                            <div className="mb-6">
+                                                <h4 className="font-bold text-lg mb-3 flex items-center">
+                                                    <Shield
+                                                        className="mr-2 text-cyan-400"
+                                                        size={20}
+                                                    />
+                                                    Engineering Challenges
+                                                    Solved
+                                                </h4>
+                                                <ul className="space-y-2">
+                                                    {projects[currentProjectIndex].challenges.map(
+                                                        (challenge, i) => (
+                                                            <li
+                                                                key={i}
+                                                                className="flex items-start text-gray-300"
+                                                            >
+                                                                <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                                                {challenge}
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            </div>
+
+                                            <div className="mb-6">
+                                                <h4 className="font-bold text-lg mb-3 flex items-center">
+                                                    <Code
+                                                        className="mr-2 text-cyan-400"
+                                                        size={20}
+                                                    />
+                                                    Tech Stack
+                                                </h4>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {projects[currentProjectIndex].tech.map(
+                                                        (tech, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm"
+                                                            >
+                                                                {tech}
+                                                            </span>
+                                                        ),
+                                                    )}
                                                 </div>
                                             </div>
+                                        </motion.div>
+                                    )}
+
+                                    <div className="mt-8 flex flex-wrap gap-3">
+                                        <motion.a
+                                            whileHover={{ y: -2 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            href={projects[currentProjectIndex].liveUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg font-medium transition-all shadow-lg shadow-cyan-500/20"
+                                            aria-label={`View live demo of ${projects[currentProjectIndex].title}`}
+                                        >
+                                            Live Demo{' '}
+                                            <ExternalLink
+                                                className="ml-2"
+                                                size={18}
+                                            />
+                                        </motion.a>
+                                        <motion.a
+                                            whileHover={{ y: -2 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            href={projects[currentProjectIndex].githubUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center px-5 py-3 bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                                            aria-label={`View GitHub repository for ${projects[currentProjectIndex].title}`}
+                                        >
+                                            GitHub Repository{' '}
+                                            <Github
+                                                className="ml-2"
+                                                size={18}
+                                            />
+                                        </motion.a>
+                                    </div>
+                                </div>
+
+                                <div className="lg:w-1/2 bg-gray-800/30 border-t lg:border-t-0 lg:border-l border-gray-800 flex items-center justify-center p-4">
+                                    <div className="relative w-full h-64 md:h-80 lg:h-full">
+                                        <div
+                                            className="absolute inset-0 bg-cover bg-center rounded-xl shadow-2xl"
+                                            style={{
+                                                backgroundImage: `url(${projects[currentProjectIndex].image})`,
+                                            }}
+                                        ></div>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent rounded-xl"></div>
+                                        <div className="absolute bottom-4 left-4 text-white">
+                                            <p className="font-bold text-xl md:text-2xl">
+                                                {projects[currentProjectIndex].title}
+                                            </p>
+                                            <p className="text-cyan-300">
+                                                {projects[currentProjectIndex].subtitle}
+                                            </p>
                                         </div>
                                     </div>
-                                </motion.div>
-                            ))}
-                        </div>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
 
                     {/* Navigation Arrows */}
