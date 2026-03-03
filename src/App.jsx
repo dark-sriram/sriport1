@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 
 import { ScrollToTop } from './components/ScrollToTop';
+import { ThemeToggle } from './components/ThemeToggle';
 
 // Project Data Structure
 const projects = [
