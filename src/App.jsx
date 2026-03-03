@@ -33,7 +33,7 @@ import {
     ChevronLeft,
     ChevronRight,
 } from 'lucide-react';
-import { ThemeToggle } from './components/ThemeToggle';
+
 import { ScrollToTop } from './components/ScrollToTop';
 
 // Project Data Structure
@@ -193,7 +193,7 @@ const useSectionTracking = (sectionIds) => {
 
 const App = () => {
     
-    const navbarVisible = useNavbarScroll();
+    const navbarVisible = true;
     const controls = useAnimation();
     const [expandedProject, setExpandedProject] = useState(null);
     const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
@@ -224,10 +224,21 @@ const App = () => {
     // Navbar animation
     useEffect(() => {
         controls.start({
-            y: navbarVisible ? 0 : -100,
+            y: 0,
             transition: { duration: 0.35, ease: 'easeInOut' },
         });
-    }, [navbarVisible, controls]);
+    }, [controls]);
+
+    // Auto-rotate carousel
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentProjectIndex((prevIndex) =>
+                prevIndex === projects.length - 1 ? 0 : prevIndex + 1
+            );
+        }, 5000); // Rotate every 5 seconds
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Project expansion handler
     const toggleProject = (id) => {
@@ -302,7 +313,7 @@ const App = () => {
                     </div>
 
                     <div className="flex items-center space-x-3">
-                        <ThemeToggle className="" />
+
 
                         <motion.a
                             whileHover={{ scale: 1.05 }}
@@ -847,15 +858,29 @@ const App = () => {
 
                 {/* Carousel Container */}
                 <div className="relative">
-                    <div className="overflow-hidden">
+                    <div 
+                        className="overflow-hidden"
+                        style={{ 
+                            perspective: '1000px',
+                            height: '500px'
+                        }}
+                    >
                         <div 
                             className="flex transition-transform duration-500 ease-in-out"
-                            style={{ transform: `translateX(-${currentProjectIndex * 100}%)` }}
+                            style={{ 
+                                transform: `rotateY(${currentProjectIndex * -360 / projects.length}deg)`,
+                                transformStyle: 'preserve-3d'
+                            }}
                         >
                             {projects.map((project, index) => (
                                 <motion.div
                                     key={project.id}
                                     className="min-w-full flex-shrink-0"
+                                    style={{ 
+                                        position: 'absolute',
+                                        width: '100%',
+                                        transform: `rotateY(${index * 360 / projects.length}deg) translateZ(300px)`
+                                    }}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.5 }}
