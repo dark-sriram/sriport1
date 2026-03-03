@@ -42,3 +42,35 @@ html {
   outline: 2px solid #00d1ff;
   outline-offset: 2px;
 }
+
+/* Enhanced theme transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(90deg, #22d3ee, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Border glow effect */
+.border-glow {
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+}
+
+/* Button active state */
+.btn-active {
+  transform: scale(0.98);
+}

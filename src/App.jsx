@@ -27,6 +27,11 @@ import {
     Shield,
     Zap,
     Server,
+    User,
+    Briefcase,
+    Award,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ScrollToTop } from './components/ScrollToTop';
@@ -191,15 +196,30 @@ const App = () => {
     const navbarVisible = useNavbarScroll();
     const controls = useAnimation();
     const [expandedProject, setExpandedProject] = useState(null);
+    const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
     const sectionIds = [
         'hero',
         'about',
         'skills',
         'projects',
+        'resume',
         'experience',
         'contact',
     ];
     const { activeSection, sectionsRef } = useSectionTracking(sectionIds);
+
+    // Carousel navigation functions
+    const goToPrevProject = () => {
+        setCurrentProjectIndex((prevIndex) =>
+            prevIndex === 0 ? projects.length - 1 : prevIndex - 1
+        );
+    };
+
+    const goToNextProject = () => {
+        setCurrentProjectIndex((prevIndex) =>
+            prevIndex === projects.length - 1 ? 0 : prevIndex + 1
+        );
+    };
 
     // Navbar animation
     useEffect(() => {
@@ -256,6 +276,7 @@ const App = () => {
                             'about',
                             'skills',
                             'projects',
+                            'resume',
                             'experience',
                             'contact',
                         ].map((section) => (
@@ -397,7 +418,7 @@ const App = () => {
                             </motion.div>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-800/50 mt-6">
+                        <div className="pt-6 border-t border-gray-800/50 mt-6">
                             <div className="flex flex-wrap items-center gap-4 text-gray-400">
                                 <div className="flex items-center">
                                     <Code
@@ -420,6 +441,36 @@ const App = () => {
                                     />
                                     <span>AI Integration</span>
                                 </div>
+                            </div>
+                            
+                            {/* Resume Section */}
+                            <div className="mt-6 flex flex-wrap gap-3">
+                                <motion.a
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    href="/resume.pdf"
+                                    download
+                                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-emerald-500/20 flex items-center"
+                                    aria-label="Download Resume"
+                                >
+                                    <Download size={18} className="mr-2" />
+                                    Download Resume
+                                </motion.a>
+                                
+                                <motion.a
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    href="#resume"
+                                    className="border border-cyan-500/30 hover:border-cyan-400 text-cyan-400 px-4 py-2 rounded-lg font-medium transition-all flex items-center"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        scrollToSection('resume');
+                                    }}
+                                    aria-label="View Resume Online"
+                                >
+                                    <Video size={18} className="mr-2" />
+                                    View Resume
+                                </motion.a>
                             </div>
                         </div>
                     </motion.div>
@@ -769,7 +820,7 @@ const App = () => {
                 </div>
             </section>
 
-            {/* Projects Section - MOST IMPORTANT */}
+            {/* Projects Section - Carousel */}
             <section
                 id="projects"
                 ref={(el) => (sectionsRef.current[3] = el)}
@@ -794,210 +845,445 @@ const App = () => {
                     </p>
                 </div>
 
-                <div className="space-y-12">
-                    {projects.map((project, index) => (
-                        <motion.div
-                            key={project.id}
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: index * 0.2, duration: 0.6 }}
-                            className="group/project relative"
+                {/* Carousel Container */}
+                <div className="relative">
+                    <div className="overflow-hidden">
+                        <div 
+                            className="flex transition-transform duration-500 ease-in-out"
+                            style={{ transform: `translateX(-${currentProjectIndex * 100}%)` }}
                         >
-                            <div
-                                className={`bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden transition-all duration-500 ${
-                                    expandedProject === project.id
-                                        ? 'ring-2 ring-cyan-500/50 shadow-xl shadow-cyan-500/20'
-                                        : 'hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10'
-                                }`}
-                            >
-                                <div className="lg:flex">
-                                    <div className="lg:w-1/2 p-6 md:p-8">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <h3 className="text-2xl md:text-3xl font-bold">
-                                                    {project.title}
-                                                </h3>
-                                                <p className="text-cyan-400 font-medium mt-1">
-                                                    {project.subtitle}
+                            {projects.map((project, index) => (
+                                <motion.div
+                                    key={project.id}
+                                    className="min-w-full flex-shrink-0"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.5 }}
+                                >
+                                    <div
+                                        className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden transition-all duration-500"
+                                    >
+                                        <div className="lg:flex">
+                                            <div className="lg:w-1/2 p-6 md:p-8">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <h3 className="text-2xl md:text-3xl font-bold">
+                                                            {project.title}
+                                                        </h3>
+                                                        <p className="text-cyan-400 font-medium mt-1">
+                                                            {project.subtitle}
+                                                        </p>
+                                                    </div>
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        onClick={() =>
+                                                            toggleProject(project.id)
+                                                        }
+                                                        className="p-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-colors"
+                                                        aria-label={
+                                                            expandedProject ===
+                                                            project.id
+                                                                ? 'Collapse project'
+                                                                : 'Expand project'
+                                                        }
+                                                    >
+                                                        {expandedProject ===
+                                                        project.id ? (
+                                                            <ChevronUp size={24} />
+                                                        ) : (
+                                                            <ChevronDown size={24} />
+                                                        )}
+                                                    </motion.button>
+                                                </div>
+
+                                                <p className="mt-6 text-gray-300 leading-relaxed">
+                                                    {project.description}
                                                 </p>
-                                            </div>
-                                            <motion.button
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() =>
-                                                    toggleProject(project.id)
-                                                }
-                                                className="p-2 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-colors"
-                                                aria-label={
-                                                    expandedProject ===
-                                                    project.id
-                                                        ? 'Collapse project'
-                                                        : 'Expand project'
-                                                }
-                                            >
-                                                {expandedProject ===
-                                                project.id ? (
-                                                    <ChevronUp size={24} />
-                                                ) : (
-                                                    <ChevronDown size={24} />
+
+                                                {expandedProject === project.id && (
+                                                    <motion.div
+                                                        initial={{
+                                                            opacity: 0,
+                                                            height: 0,
+                                                        }}
+                                                        animate={{
+                                                            opacity: 1,
+                                                            height: 'auto',
+                                                        }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        transition={{ duration: 0.4 }}
+                                                        className="mt-8"
+                                                    >
+                                                        <div className="mb-6">
+                                                            <h4 className="font-bold text-lg mb-3 flex items-center">
+                                                                <Zap
+                                                                    className="mr-2 text-cyan-400"
+                                                                    size={20}
+                                                                />
+                                                                Key Features
+                                                            </h4>
+                                                            <ul className="space-y-2">
+                                                                {project.features.map(
+                                                                    (feature, i) => (
+                                                                        <li
+                                                                            key={i}
+                                                                            className="flex items-start text-gray-300"
+                                                                        >
+                                                                            <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                                                                            {feature}
+                                                                        </li>
+                                                                    ),
+                                                                )}
+                                                            </ul>
+                                                        </div>
+
+                                                        <div className="mb-6">
+                                                            <h4 className="font-bold text-lg mb-3 flex items-center">
+                                                                <Shield
+                                                                    className="mr-2 text-cyan-400"
+                                                                    size={20}
+                                                                />
+                                                                Engineering Challenges
+                                                                Solved
+                                                            </h4>
+                                                            <ul className="space-y-2">
+                                                                {project.challenges.map(
+                                                                    (challenge, i) => (
+                                                                        <li
+                                                                            key={i}
+                                                                            className="flex items-start text-gray-300"
+                                                                        >
+                                                                            <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                                                            {challenge}
+                                                                        </li>
+                                                                    ),
+                                                                )}
+                                                            </ul>
+                                                        </div>
+
+                                                        <div className="mb-6">
+                                                            <h4 className="font-bold text-lg mb-3 flex items-center">
+                                                                <Code
+                                                                    className="mr-2 text-cyan-400"
+                                                                    size={20}
+                                                                />
+                                                                Tech Stack
+                                                            </h4>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {project.tech.map(
+                                                                    (tech, i) => (
+                                                                        <span
+                                                                            key={i}
+                                                                            className="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm"
+                                                                        >
+                                                                            {tech}
+                                                                        </span>
+                                                                    ),
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
                                                 )}
-                                            </motion.button>
-                                        </div>
 
-                                        <p className="mt-6 text-gray-300 leading-relaxed">
-                                            {project.description}
-                                        </p>
-
-                                        {expandedProject === project.id && (
-                                            <motion.div
-                                                initial={{
-                                                    opacity: 0,
-                                                    height: 0,
-                                                }}
-                                                animate={{
-                                                    opacity: 1,
-                                                    height: 'auto',
-                                                }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                transition={{ duration: 0.4 }}
-                                                className="mt-8"
-                                            >
-                                                <div className="mb-6">
-                                                    <h4 className="font-bold text-lg mb-3 flex items-center">
-                                                        <Zap
-                                                            className="mr-2 text-cyan-400"
-                                                            size={20}
+                                                <div className="mt-8 flex flex-wrap gap-3">
+                                                    <motion.a
+                                                        whileHover={{ y: -2 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        href={project.liveUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg font-medium transition-all shadow-lg shadow-cyan-500/20"
+                                                        aria-label={`View live demo of ${project.title}`}
+                                                    >
+                                                        Live Demo{' '}
+                                                        <ExternalLink
+                                                            className="ml-2"
+                                                            size={18}
                                                         />
-                                                        Key Features
-                                                    </h4>
-                                                    <ul className="space-y-2">
-                                                        {project.features.map(
-                                                            (feature, i) => (
-                                                                <li
-                                                                    key={i}
-                                                                    className="flex items-start text-gray-300"
-                                                                >
-                                                                    <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-                                                                    {feature}
-                                                                </li>
-                                                            ),
-                                                        )}
-                                                    </ul>
+                                                    </motion.a>
+                                                    <motion.a
+                                                        whileHover={{ y: -2 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        href={project.githubUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center px-5 py-3 bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                                                        aria-label={`View GitHub repository for ${project.title}`}
+                                                    >
+                                                        GitHub Repository{' '}
+                                                        <Github
+                                                            className="ml-2"
+                                                            size={18}
+                                                        />
+                                                    </motion.a>
                                                 </div>
+                                            </div>
 
-                                                <div className="mb-6">
-                                                    <h4 className="font-bold text-lg mb-3 flex items-center">
-                                                        <Shield
-                                                            className="mr-2 text-cyan-400"
-                                                            size={20}
-                                                        />
-                                                        Engineering Challenges
-                                                        Solved
-                                                    </h4>
-                                                    <ul className="space-y-2">
-                                                        {project.challenges.map(
-                                                            (challenge, i) => (
-                                                                <li
-                                                                    key={i}
-                                                                    className="flex items-start text-gray-300"
-                                                                >
-                                                                    <div className="mt-1 mr-3 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                                                                    {challenge}
-                                                                </li>
-                                                            ),
-                                                        )}
-                                                    </ul>
-                                                </div>
-
-                                                <div className="mb-6">
-                                                    <h4 className="font-bold text-lg mb-3 flex items-center">
-                                                        <Code
-                                                            className="mr-2 text-cyan-400"
-                                                            size={20}
-                                                        />
-                                                        Tech Stack
-                                                    </h4>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {project.tech.map(
-                                                            (tech, i) => (
-                                                                <span
-                                                                    key={i}
-                                                                    className="px-3 py-1 bg-gray-800 border border-gray-700 rounded-full text-sm"
-                                                                >
-                                                                    {tech}
-                                                                </span>
-                                                            ),
-                                                        )}
+                                            <div className="lg:w-1/2 bg-gray-800/30 border-t lg:border-t-0 lg:border-l border-gray-800 flex items-center justify-center p-4">
+                                                <div className="relative w-full h-64 md:h-80 lg:h-full">
+                                                    <div
+                                                        className="absolute inset-0 bg-cover bg-center rounded-xl shadow-2xl"
+                                                        style={{
+                                                            backgroundImage: `url(${project.image})`,
+                                                        }}
+                                                    ></div>
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent rounded-xl"></div>
+                                                    <div className="absolute bottom-4 left-4 text-white">
+                                                        <p className="font-bold text-xl md:text-2xl">
+                                                            {project.title}
+                                                        </p>
+                                                        <p className="text-cyan-300">
+                                                            {project.subtitle}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            </motion.div>
-                                        )}
-
-                                        <div className="mt-8 flex flex-wrap gap-3">
-                                            <motion.a
-                                                whileHover={{ y: -2 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                href={project.liveUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg font-medium transition-all shadow-lg shadow-cyan-500/20"
-                                                aria-label={`View live demo of ${project.title}`}
-                                            >
-                                                Live Demo{' '}
-                                                <ExternalLink
-                                                    className="ml-2"
-                                                    size={18}
-                                                />
-                                            </motion.a>
-                                            <motion.a
-                                                whileHover={{ y: -2 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                href={project.githubUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center px-5 py-3 bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors"
-                                                aria-label={`View GitHub repository for ${project.title}`}
-                                            >
-                                                GitHub Repository{' '}
-                                                <Github
-                                                    className="ml-2"
-                                                    size={18}
-                                                />
-                                            </motion.a>
+                                            </div>
                                         </div>
                                     </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
 
-                                    <div className="lg:w-1/2 bg-gray-800/30 border-t lg:border-t-0 lg:border-l border-gray-800 flex items-center justify-center p-4">
-                                        <div className="relative w-full h-64 md:h-80 lg:h-full">
-                                            <div
-                                                className="absolute inset-0 bg-cover bg-center rounded-xl shadow-2xl"
-                                                style={{
-                                                    backgroundImage: `url(${project.image})`,
-                                                }}
-                                            ></div>
-                                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent rounded-xl"></div>
-                                            <div className="absolute bottom-4 left-4 text-white">
-                                                <p className="font-bold text-xl md:text-2xl">
-                                                    {project.title}
-                                                </p>
-                                                <p className="text-cyan-300">
-                                                    {project.subtitle}
-                                                </p>
-                                            </div>
+                    {/* Navigation Arrows */}
+                    <div className="absolute top-1/2 left-4 right-4 flex justify-between -translate-y-1/2 pointer-events-none">
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => goToPrevProject()}
+                            className="pointer-events-auto bg-gray-800/70 backdrop-blur-sm border border-gray-700 text-gray-200 p-3 rounded-full hover:bg-gray-700 transition-colors"
+                            aria-label="Previous project"
+                        >
+                            <ChevronLeft size={24} />
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => goToNextProject()}
+                            className="pointer-events-auto bg-gray-800/70 backdrop-blur-sm border border-gray-700 text-gray-200 p-3 rounded-full hover:bg-gray-700 transition-colors"
+                            aria-label="Next project"
+                        >
+                            <ChevronRight size={24} />
+                        </motion.button>
+                    </div>
+
+                    {/* Dots Indicator */}
+                    <div className="flex justify-center mt-8 space-x-2">
+                        {projects.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setCurrentProjectIndex(index)}
+                                className={`w-3 h-3 rounded-full transition-colors ${
+                                    currentProjectIndex === index
+                                        ? 'bg-cyan-500'
+                                        : 'bg-gray-700'
+                                }`}
+                                aria-label={`Go to project ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Resume Section */}
+            <section
+                id="resume"
+                ref={(el) => (sectionsRef.current[4] = el)}
+                className="py-20 px-4 md:px-8 max-w-7xl mx-auto"
+            >
+                <div className="text-center mb-16">
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="text-3xl md:text-4xl font-bold"
+                    >
+                        My{' '}
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                            Resume
+                        </span>
+                    </motion.h2>
+                    <p className="mt-4 text-gray-400 max-w-2xl mx-auto">
+                        Detailed overview of my skills, experience, and qualifications
+                    </p>
+                </div>
+
+                <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                        <h3 className="text-xl font-bold">Resume Preview</h3>
+                        <div className="flex space-x-3">
+                            <motion.a
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                href="/resume.pdf"
+                                download
+                                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-emerald-500/20 flex items-center"
+                                aria-label="Download Resume PDF"
+                            >
+                                <Download size={18} className="mr-2" />
+                                Download PDF
+                            </motion.a>
+                        </div>
+                    </div>
+                    
+                    <div className="p-6 md:p-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Left Column - Personal Info, Skills */}
+                            <div className="space-y-8">
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold mb-4 flex items-center">
+                                        <User className="mr-2 text-cyan-400" size={20} />
+                                        Personal Information
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-sm text-gray-400">Name</p>
+                                            <p className="text-gray-200">Sriram P</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-400">Email</p>
+                                            <p className="text-gray-200">2k22csbs49@kiot.ac.in</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-400">Location</p>
+                                            <p className="text-gray-200">Coimbatore, Tamil Nadu, India</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-400">Availability</p>
+                                            <p className="text-gray-200">Open to Full-time Opportunities</p>
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold mb-4 flex items-center">
+                                        <Code className="mr-2 text-cyan-400" size={20} />
+                                        Core Skills
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <h5 className="font-medium text-gray-300 mb-2">Frontend</h5>
+                                            <ul className="space-y-1">
+                                                <li className="text-gray-200">React</li>
+                                                <li className="text-gray-200">TypeScript</li>
+                                                <li className="text-gray-200">Tailwind CSS</li>
+                                                <li className="text-gray-200">Redux/Zustand</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h5 className="font-medium text-gray-300 mb-2">Backend</h5>
+                                            <ul className="space-y-1">
+                                                <li className="text-gray-200">Node.js</li>
+                                                <li className="text-gray-200">Express.js</li>
+                                                <li className="text-gray-200">MongoDB</li>
+                                                <li className="text-gray-200">Redis</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold mb-4 flex items-center">
+                                        <Zap className="mr-2 text-cyan-400" size={20} />
+                                        Professional Summary
+                                    </h4>
+                                    <p className="text-gray-300 leading-relaxed">
+                                        Full Stack Developer with expertise in the MERN stack and a focus on building 
+                                        scalable, real-time applications. Proven track record in developing complex 
+                                        systems with robust architecture and performance optimization. 
+                                        Experienced in AI integration and modern development practices.
+                                    </p>
+                                </div>
                             </div>
-                        </motion.div>
-                    ))}
+
+                            {/* Right Column - Experience, Education */}
+                            <div className="space-y-8">
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold mb-4 flex items-center">
+                                        <Briefcase className="mr-2 text-cyan-400" size={20} />
+                                        Work Experience
+                                    </h4>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <div className="flex justify-between items-start">
+                                                <h5 className="font-bold text-gray-200">AI Internship</h5>
+                                                <span className="text-sm text-cyan-400">Summer 2023</span>
+                                            </div>
+                                            <p className="text-cyan-300 text-sm mb-2">Corizo</p>
+                                            <ul className="text-gray-300 text-sm space-y-1">
+                                                <li>• Developed AI-powered document processing pipeline using TensorFlow.js</li>
+                                                <li>• Optimized model inference time by 40% through quantization techniques</li>
+                                                <li>• Implemented secure API endpoints with Redis rate limiting</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div>
+                                            <div className="flex justify-between items-start">
+                                                <h5 className="font-bold text-gray-200">Technical Lead</h5>
+                                                <span className="text-sm text-cyan-400">2022-2024</span>
+                                            </div>
+                                            <p className="text-cyan-300 text-sm mb-2">College of Engineering</p>
+                                            <ul className="text-gray-300 text-sm space-y-1">
+                                                <li>• Organized technical workshops for 200+ students</li>
+                                                <li>• Mentored 15+ project teams in scalable application designs</li>
+                                                <li>• Led development of internal college systems</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold mb-4 flex items-center">
+                                        <GraduationCap className="mr-2 text-cyan-400" size={20} />
+                                        Education
+                                    </h4>
+                                    <div>
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h5 className="font-bold text-gray-200">B.Tech Computer Science</h5>
+                                                <p className="text-cyan-300 text-sm">Anna University</p>
+                                            </div>
+                                            <span className="text-sm text-cyan-400">2020-2024</span>
+                                        </div>
+                                        <div className="mt-3">
+                                            <span className="text-2xl font-bold text-cyan-400">8.7/10</span>
+                                            <span className="text-gray-400 ml-2">CGPA</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-6">
+                                    <h4 className="text-lg font-bold mb-4 flex items-center">
+                                        <Award className="mr-2 text-cyan-400" size={20} />
+                                        Achievements
+                                    </h4>
+                                    <ul className="text-gray-300 text-sm space-y-2">
+                                        <li className="flex items-start">
+                                            <div className="mt-1 mr-2 w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                                            Smart India Hackathon 2024 - National Finalist
+                                        </li>
+                                        <li className="flex items-start">
+                                            <div className="mt-1 mr-2 w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                                            Developed MON AMI - Real-time communication platform
+                                        </li>
+                                        <li className="flex items-start">
+                                            <div className="mt-1 mr-2 w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+                                            Led technical symposium for engineering students
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             {/* Experience & Education Section */}
             <section
                 id="experience"
-                ref={(el) => (sectionsRef.current[4] = el)}
+                ref={(el) => (sectionsRef.current[5] = el)}
                 className="py-20 px-4 md:px-8 bg-gray-900/30 border-y border-gray-800/50"
             >
                 <div className="max-w-7xl mx-auto">
